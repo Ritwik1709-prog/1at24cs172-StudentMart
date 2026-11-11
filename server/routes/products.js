@@ -29,4 +29,12 @@ router.post('/', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const product = await Product.findOneAndDelete({ _id: req.params.id, ownerId: req.userId })
+    if (!product) return res.status(404).json({ message: 'Product not found.' })
+    res.json({ message: 'Product removed from your catalog.' })
+  } catch (error) { next(error) }
+})
+
 export default router

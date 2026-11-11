@@ -5,7 +5,7 @@ import {
   Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Clock3, Command,
   CreditCard, Download, Eye, EyeOff, GraduationCap, LayoutDashboard, LifeBuoy,
   Lock, LogOut, Mail, Menu, MoreHorizontal, Package, Plus, Search, Settings, ShieldCheck,
-  ShoppingBag, Sparkles, TrendingUp, Users, X, Store, Moon, Sun,
+  ShoppingBag, Sparkles, TrendingUp, Users, X, Store, Moon, Sun, Trash2,
 } from 'lucide-react'
 const StudentStorefront = lazy(() => import('./components/StudentStorefront.tsx'))
 
@@ -30,15 +30,18 @@ const categoryArt = { Textbooks: ['📚', 'blue'], 'Notes & study guides': ['�
 const formatINR = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value) || 0)
 const nav = [
   { label: 'Overview', icon: LayoutDashboard },
-  { label: 'My products', icon: Package, count: '12' },
+  { label: 'My products', icon: Package },
   { label: 'Storefront', icon: Store },
   { label: 'Orders', icon: ShoppingBag, count: '4' },
   { label: 'Customers', icon: Users },
   { label: 'Analytics', icon: TrendingUp },
 ]
 const sellerNav = [
+  { label: 'Overview', icon: LayoutDashboard },
   { label: 'My products', icon: Package },
   { label: 'Storefront', icon: Store },
+  { label: 'Orders', icon: ShoppingBag },
+  { label: 'Analytics', icon: TrendingUp },
 ]
 
 const TOKEN_KEY = 'student_mart_token'
@@ -484,20 +487,20 @@ function AreaChart({ period }) {
 function Dashboard({ user, onLogout, theme, onToggleTheme }) {
   const isAdmin = user.role === 'admin'
   const visibleNav = isAdmin ? nav : sellerNav
-  const [active, setActive] = useState(isAdmin ? 'Overview' : 'My products')
+  const [active, setActive] = useState('Overview')
   const [period, setPeriod] = useState('30 days')
   const [search, setSearch] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileNav, setMobileNav] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   const [savingProduct, setSavingProduct] = useState(false)
-  const [products, setProducts] = useState(isAdmin ? initialProducts : [])
+  const [products, setProducts] = useState(initialProducts)
   const [toast, setToast] = useState('')
   const [notifications, setNotifications] = useState(false)
   const firstName = (user?.name || user?.email?.split('@')[0] || 'User').trim().split(/\s+/)[0] || 'User'
   const initials = ((user?.name || user?.email || 'U').trim().split(/\s+/).map(s => s[0]).slice(0, 2).join('') || 'U').toUpperCase()
   const filteredOrders = useMemo(() => orders.filter(o => `${o.id} ${o.buyer} ${o.item} ${o.status}`.toLowerCase().includes(search.toLowerCase())), [search])
-  const filteredProducts = useMemo(() => products.filter(p => `${p.name} ${p.category}`.toLowerCase().includes(search.toLowerCase())), [products, search])
+  const filteredProducts = useMemo(() => products.filter(p => `${p.name} ${p.category} ${p.description || ''}`.toLowerCase().includes(search.toLowerCase())), [products, search])
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3000); return () => clearTimeout(id) }, [toast])
   useEffect(() => {
     let live = true
@@ -507,7 +510,9 @@ function Dashboard({ user, onLogout, theme, onToggleTheme }) {
         const [mark, tone] = categoryArt[product.category] || ['🎓', 'lilac']
         return { id: product._id, name: product.name, category: product.category, price: product.price, description: product.description, sales: 0, stock: 'Available', mark, tone, date: new Date(product.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }
       })
-      setProducts(current => [...mapped, ...current.filter(item => !mapped.some(savedProduct => savedProduct.id === item.id))])
+      if (mapped.length > 0) {
+        setProducts(current => [...mapped, ...current.filter(item => !mapped.some(savedProduct => savedProduct.id === item.id))])
+      }
     }).catch(() => {})
     return () => { live = false }
   }, [user.id])
@@ -517,6 +522,20 @@ function Dashboard({ user, onLogout, theme, onToggleTheme }) {
     try { localStorage.removeItem(TOKEN_KEY) } catch {}
     onLogout()
   }
+
+  async function deleteProduct(productId) {
+    if (!window.confirm('Are you sure you want to remove this product from your catalog?')) return
+    try {
+      if (!String(productId).startsWith('sample-')) {
+        await productApi(`/${productId}`, { method: 'DELETE' })
+      }
+      setProducts(current => current.filter(p => p.id !== productId))
+      setToast('Product removed from catalog.')
+    } catch (err) {
+      setToast(err.message || 'Could not delete product.')
+    }
+  }
+
   async function saveProduct(event) {
     event.preventDefault()
     const fd = new FormData(event.currentTarget)
@@ -527,7 +546,7 @@ function Dashboard({ user, onLogout, theme, onToggleTheme }) {
       const [mark, tone] = categoryArt[product.category] || ['🎓', 'lilac']
       const created = { id: product._id, name: product.name, category: product.category, price: product.price, description: product.description, sales: 0, stock: 'Available', mark, tone, date: 'Just now' }
       setProducts(current => [created, ...current])
-      setAddOpen(false); setActive('Storefront'); setSearch(''); setToast('Your product is live on the storefront.')
+      setAddOpen(false); setActive('My products'); setSearch(''); setToast('Your product is live on your catalog.')
     } catch (error) { setToast(error.message) }
     finally { setSavingProduct(false) }
   }
@@ -542,7 +561,21 @@ function Dashboard({ user, onLogout, theme, onToggleTheme }) {
     {mobileNav && <button className="mobile-backdrop" onClick={() => setMobileNav(false)} aria-label="Close navigation"/>}
     <main className="main-area"><header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open navigation"><Menu size={20}/></button><div className="breadcrumb">Workspace <ChevronRight size={14}/><b>{active}</b></div></div><div className="topbar-actions"><label className="global-search"><Search size={16}/><input aria-label="Search orders or products" placeholder="Search anything..." value={search} onChange={e=>setSearch(e.target.value)}/><kbd><Command size={11}/> K</kbd></label><ThemeToggle theme={theme} onToggle={onToggleTheme}/><div className="notification-wrap"><button className="icon-button notification-button" aria-label="Notifications" onClick={()=>setNotifications(!notifications)}><Bell size={18}/><i/></button>{notifications && <div className="notification-popover"><b>You’re all caught up</b><span>New orders and updates will show here.</span></div>}</div><span className="topbar-divider"/><button className="top-user" onClick={()=>setMenuOpen(!menuOpen)}><span className="profile-avatar">{initials}</span><ChevronDown size={14}/></button></div></header>
       <div className="page-content">
-        {isAdmin && (active === 'Overview' || active === 'Analytics') ? <Overview active={active} firstName={firstName} period={period} setPeriod={setPeriod} filteredOrders={filteredOrders} products={products} setActive={setActive} setAddOpen={setAddOpen}/> : active === 'My products' ? <ProductsView products={filteredProducts} onAdd={()=>setAddOpen(true)} search={search}/> : active === 'Storefront' ? <StorefrontView products={filteredProducts} onAdd={()=>setAddOpen(true)}/> : isAdmin && active === 'Orders' ? <OrdersView orders={filteredOrders}/> : isAdmin && active === 'Customers' ? <CustomersView/> : active === 'Settings' ? <SettingsView user={user} onLogout={logout}/> : <ProductsView products={filteredProducts} onAdd={()=>setAddOpen(true)} search={search}/>}
+        {active === 'Overview' || active === 'Analytics' ? (
+          <Overview active={active} firstName={firstName} period={period} setPeriod={setPeriod} filteredOrders={filteredOrders} products={products} setActive={setActive} setAddOpen={setAddOpen}/>
+        ) : active === 'My products' ? (
+          <ProductsView products={filteredProducts} onAdd={()=>setAddOpen(true)} search={search} onClearSearch={()=>setSearch('')} onDelete={deleteProduct} onLoadSamples={()=>setProducts(initialProducts)} onViewStorefront={()=>setActive('Storefront')}/>
+        ) : active === 'Storefront' ? (
+          <StorefrontView products={filteredProducts} onAdd={()=>setAddOpen(true)}/>
+        ) : active === 'Orders' ? (
+          <OrdersView orders={filteredOrders}/>
+        ) : active === 'Customers' ? (
+          <CustomersView/>
+        ) : active === 'Settings' ? (
+          <SettingsView user={user} onLogout={logout}/>
+        ) : (
+          <Overview active="Overview" firstName={firstName} period={period} setPeriod={setPeriod} filteredOrders={filteredOrders} products={products} setActive={setActive} setAddOpen={setAddOpen}/>
+        )}
       </div>
     </main>
     {addOpen && <div className="modal-backdrop" onClick={()=>setAddOpen(false)}><form className="product-modal" onSubmit={saveProduct} onClick={e=>e.stopPropagation()}><div className="modal-header"><div><span className="eyebrow">GROW YOUR STORE</span><h3>Add a student product</h3></div><button type="button" className="icon-button" onClick={()=>setAddOpen(false)} aria-label="Close"><X size={18}/></button></div><label className="field-label">Product name<input name="name" required minLength="2" maxLength="120" placeholder="e.g. Data Structures study notes"/></label><label className="field-label">Category<select name="category">{productCategories.map(category=><option key={category}>{category}</option>)}</select></label><label className="field-label">Price (₹ INR)<input name="price" type="number" min="1" max="1000000" required placeholder="499"/></label><label className="field-label">Description <span className="optional-label">Optional</span><textarea name="description" maxLength="280" rows="3" placeholder="Condition, edition, what's included…"/></label><button className="primary-button" type="submit" disabled={savingProduct}>{savingProduct ? <span className="spinner"/> : <><Plus size={16}/> Add to storefront</>}</button></form></div>}
@@ -582,8 +615,220 @@ function OrdersTable({ orders: list, compact = false }) {
   return <div className="table-scroll"><table className="orders-table"><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>PRODUCT</th><th>DATE</th><th>AMOUNT</th><th>STATUS</th>{!compact&&<th/>}</tr></thead><tbody>{list.map(o=><tr key={o.id}><td className="order-id">{o.id}</td><td><span className="buyer-cell"><i className={`buyer-avatar ${o.color}`}>{o.initials}</i>{o.buyer}</span></td><td>{o.item}</td><td className="date-cell">{o.date}</td><td className="amount-cell">{o.amount}</td><td><span className={`status status-${o.status.toLowerCase()}`}><i/>{o.status}</span></td>{!compact&&<td><button className="row-more" aria-label={`More about ${o.id}`}><MoreHorizontal size={17}/></button></td>}</tr>)}</tbody></table></div>
 }
 
-function ProductsView({ products, onAdd, search }) {
-  return <><div className="welcome-row subpage-title"><div><div className="date-line">YOUR CREATOR SPACE <span className="date-separator">·</span> CATALOG</div><h1>My products<span className="count-heading">{products.length}</span></h1><p className="welcome-sub">Books, study resources and campus essentials listed by you.</p></div><button className="primary-button add-product" onClick={onAdd}><Plus size={17}/> Add a product</button></div><div className="filter-bar"><div className="filter-label"><Package size={16}/> All products <span>{products.length}</span></div><button className="outline-button"><Download size={15}/> Export</button></div><section className="panel table-panel"><div className="table-scroll"><table className="orders-table products-table"><thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>PRICE</th><th>SALES</th><th>STATUS</th><th>ADDED</th><th/></tr></thead><tbody>{products.map(p=><tr key={p.id}><td><span className="table-product"><i className={`product-thumb ${p.tone}`}>{p.mark}</i><b>{p.name}</b></span></td><td>{p.category}</td><td className="amount-cell">{formatINR(p.price)}</td><td>{p.sales}</td><td><span className={`stock-status ${p.stock==='Low stock'?'low':''}`}><i/>{p.stock}</span></td><td className="date-cell">{p.date}</td><td><button className="row-more" aria-label={`More about ${p.name}`}><MoreHorizontal size={17}/></button></td></tr>)}</tbody></table>{!products.length&&<div className="empty-state"><div><Search size={19}/></div><b>No products match “{search}”</b><span>Try another search or add a product.</span></div>}</div><div className="table-pagination"><span>Showing <b>{products.length}</b> products</span><div><button className="pagination-button" aria-label="Previous page"><ChevronLeft size={16}/></button><button className="pagination-button current-page">1</button><button className="pagination-button" aria-label="Next page"><ChevronRight size={16}/></button></div></div></section><div className="page-note"><Sparkles size={15}/> Every listing helps another student find what they need.</div></>
+function ProductsView({ products, onAdd, search, onClearSearch, onDelete, onLoadSamples, onViewStorefront }) {
+  const [selectedCategory, setSelectedCategory] = useState('All')
+
+  const displayed = useMemo(() => {
+    return products.filter(p => {
+      const matchesCat = selectedCategory === 'All' || p.category === selectedCategory
+      return matchesCat
+    })
+  }, [products, selectedCategory])
+
+  const totalValue = products.reduce((sum, p) => sum + (Number(p.price) || 0), 0)
+
+  return (
+    <>
+      <div className="welcome-row subpage-title">
+        <div>
+          <div className="date-line">
+            <span className="live-dot" /> YOUR CREATOR SPACE <span className="date-separator">·</span> CATALOG
+          </div>
+          <h1>
+            My products <span className="count-heading">{products.length}</span>
+          </h1>
+          <p className="welcome-sub">
+            Books, study resources, electronics, and campus essentials listed by you.
+          </p>
+        </div>
+        <div className="subpage-actions">
+          <button type="button" className="outline-button" onClick={onViewStorefront}>
+            <Store size={15} /> View storefront
+          </button>
+          <button type="button" className="primary-button add-product" onClick={onAdd}>
+            <Plus size={17} /> Add a product
+          </button>
+        </div>
+      </div>
+
+      <div className="catalog-stats-row">
+        <div className="catalog-stat">
+          <div className="catalog-stat-icon purple">
+            <Package size={20} />
+          </div>
+          <div className="catalog-stat-info">
+            <span>Listed items</span>
+            <b>{products.length} products</b>
+          </div>
+        </div>
+        <div className="catalog-stat">
+          <div className="catalog-stat-icon green">
+            <CreditCard size={20} />
+          </div>
+          <div className="catalog-stat-info">
+            <span>Total catalog value</span>
+            <b>{formatINR(totalValue)}</b>
+          </div>
+        </div>
+        <div className="catalog-stat">
+          <div className="catalog-stat-icon amber">
+            <Sparkles size={20} />
+          </div>
+          <div className="catalog-stat-info">
+            <span>Storefront visibility</span>
+            <b className="stat-live-status">
+              <span className="live-dot" /> Live & discoverable
+            </b>
+          </div>
+        </div>
+      </div>
+
+      <div className="filter-bar">
+        <div className="category-tabs catalog-filter-tabs">
+          {['All', ...productCategories].map(cat => (
+            <button
+              key={cat}
+              type="button"
+              className={`category-tab ${selectedCategory === cat ? 'active' : ''}`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat} {cat === 'All' ? `(${products.length})` : ''}
+            </button>
+          ))}
+        </div>
+        <div className="filter-right-actions">
+          {products.length === 0 && (
+            <button type="button" className="outline-button" onClick={onLoadSamples}>
+              <Sparkles size={14} /> Load demo items
+            </button>
+          )}
+          <button type="button" className="outline-button" onClick={() => alert('Catalog export ready: ' + products.length + ' items.')}>
+            <Download size={15} /> Export
+          </button>
+        </div>
+      </div>
+
+      <section className="panel table-panel">
+        {displayed.length > 0 ? (
+          <div className="table-scroll">
+            <table className="orders-table products-table">
+              <thead>
+                <tr>
+                  <th>PRODUCT</th>
+                  <th>CATEGORY</th>
+                  <th>PRICE</th>
+                  <th>SALES</th>
+                  <th>STATUS</th>
+                  <th>ADDED</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayed.map(p => (
+                  <tr key={p.id}>
+                    <td>
+                      <span className="table-product">
+                        <i className={`product-thumb ${p.tone}`}>{p.mark}</i>
+                        <div>
+                          <b>{p.name}</b>
+                          {p.description && <small className="product-desc-line">{p.description}</small>}
+                        </div>
+                      </span>
+                    </td>
+                    <td><span className="count-chip">{p.category}</span></td>
+                    <td className="amount-cell">{formatINR(p.price)}</td>
+                    <td>{p.sales || 0}</td>
+                    <td>
+                      <span className={`stock-status ${p.stock === 'Low stock' ? 'low' : ''}`}>
+                        <i /> {p.stock || 'Available'}
+                      </span>
+                    </td>
+                    <td className="date-cell">{p.date}</td>
+                    <td>
+                      <div className="action-buttons-cell">
+                        <button
+                          type="button"
+                          className="table-action-btn"
+                          title="View on Storefront"
+                          onClick={onViewStorefront}
+                        >
+                          <Eye size={13} /> View
+                        </button>
+                        <button
+                          type="button"
+                          className="table-action-btn btn-danger"
+                          title="Remove product"
+                          onClick={() => onDelete(p.id)}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : search ? (
+          <div className="empty-catalog-card">
+            <div className="empty-icon-wrap">
+              <Search size={32} />
+            </div>
+            <h3>No products found for “{search}”</h3>
+            <p>We couldn't find any products matching your search term. Try searching for something else or clear the search filter.</p>
+            <button type="button" className="outline-button" onClick={onClearSearch}>
+              Clear search filter
+            </button>
+          </div>
+        ) : (
+          <div className="empty-catalog-card">
+            <div className="empty-icon-wrap">
+              <Package size={34} />
+            </div>
+            <h3>Your campus catalog is empty</h3>
+            <p>
+              Turn your pre-loved textbooks, handwritten study notes, calculators, and college essentials into cash. Classmates can discover and purchase items directly through your storefront.
+            </p>
+            <div className="empty-actions">
+              <button type="button" className="primary-button" onClick={onAdd}>
+                <Plus size={16} /> Add your first product
+              </button>
+              <button type="button" className="outline-button" onClick={onLoadSamples}>
+                <Sparkles size={15} /> Load 6 demo campus items
+              </button>
+            </div>
+            <div className="catalog-tips">
+              <div className="tip-item">
+                <b>📚 Textbooks & Notes</b>
+                <span>Senior year guides and exam solutions get picked up within days.</span>
+              </div>
+              <div className="tip-item">
+                <b>⚡ Electronics & Tools</b>
+                <span>Calculators, adapters, Arduino kits, and lab wear are always in demand.</span>
+              </div>
+              <div className="tip-item">
+                <b>🤝 Campus Handoffs</b>
+                <span>Meet securely between classes in the library or student cafeteria.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="table-pagination">
+          <span>Showing <b>{displayed.length}</b> of <b>{products.length}</b> products</span>
+          <div>
+            <button className="pagination-button" aria-label="Previous page"><ChevronLeft size={16}/></button>
+            <button className="pagination-button current-page">1</button>
+            <button className="pagination-button" aria-label="Next page"><ChevronRight size={16}/></button>
+          </div>
+        </div>
+      </section>
+
+      <div className="page-note">
+        <Sparkles size={15}/> Every listing helps another student find what they need.
+      </div>
+    </>
+  )
 }
 
 function OrdersView({ orders: list }) {
