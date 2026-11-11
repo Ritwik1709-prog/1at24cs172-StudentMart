@@ -10,7 +10,19 @@ router.use(requireAuth)
 router.get('/', async (req, res, next) => {
   try {
     const products = await Product.find({ ownerId: req.userId }).sort({ createdAt: -1 }).lean()
-    res.json({ products })
+    res.json({ products: products.map(p => ({ ...p, isOwner: true })) })
+  } catch (error) { next(error) }
+})
+
+router.get('/market', async (req, res, next) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 }).lean()
+    res.json({
+      products: products.map(p => ({
+        ...p,
+        isOwner: String(p.ownerId) === String(req.userId),
+      })),
+    })
   } catch (error) { next(error) }
 })
 

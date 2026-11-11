@@ -7,9 +7,16 @@ import { cookieOptions, requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 const administratorEmail = (process.env.ADMIN_EMAIL || 'vaida.ri1709@gmail.com').toLowerCase()
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const emailPattern = /^[^\s@]+@[^\s@]+\.edu(\.[a-z]{2,})?$/i
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/
 const googleClient = new OAuth2Client()
+
+function isValidEduEmail(email) {
+  if (typeof email !== 'string') return false
+  const trimmed = email.trim().toLowerCase()
+  if (administratorEmail && trimmed === administratorEmail) return true
+  return emailPattern.test(trimmed)
+}
 
 function publicUser(user) {
   const role = (administratorEmail && user.email === administratorEmail) ? 'admin' : (user.role || 'seller')
@@ -35,8 +42,8 @@ router.post('/register', async (req, res, next) => {
     if (name.length < 2 || name.length > 80) {
       return res.status(400).json({ message: 'Name must be between 2 and 80 characters.' })
     }
-    if (!emailPattern.test(email) || email.length > 254) {
-      return res.status(400).json({ message: 'Enter a valid email address.' })
+    if (!isValidEduEmail(email) || email.length > 254) {
+      return res.status(400).json({ message: 'Please enter a valid student email address ending with .edu (e.g. you@college.edu).' })
     }
     if (!passwordPattern.test(password)) {
       return res.status(400).json({ message: 'Password must be 8–72 characters and include an uppercase letter, lowercase letter, and a number.' })
@@ -58,8 +65,8 @@ router.post('/login', async (req, res, next) => {
     const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : ''
     const password = typeof req.body.password === 'string' ? req.body.password : ''
 
-    if (!emailPattern.test(email) || !password || password.length > 72) {
-      return res.status(400).json({ message: 'Enter a valid email and password.' })
+    if (!isValidEduEmail(email) || !password || password.length > 72) {
+      return res.status(400).json({ message: 'Enter a valid .edu email address and password.' })
     }
     const user = await User.findOne({ email }).select('+password')
     if (!user?.password || !(await bcrypt.compare(password, user.password))) {
@@ -93,6 +100,9 @@ router.post('/google', async (req, res, next) => {
     }
 
     const email = claims.email.trim().toLowerCase()
+    if (!isValidEduEmail(email)) {
+      return res.status(403).json({ message: 'Only Google accounts with a .edu college email address are allowed.' })
+    }
     let user = await User.findOne({ email }).select('+googleId')
     if (user?.googleId && user.googleId !== claims.sub) {
       return res.status(409).json({ message: 'This email is already linked to a different Google account.' })

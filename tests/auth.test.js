@@ -6,23 +6,23 @@ import User from '../server/models/User.js'
 import { cookieOptions } from '../server/middleware/auth.js'
 
 describe('User Authentication Unit Tests', () => {
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+  const emailPattern = /^[^\s@]+@[^\s@]+\.edu(\.[a-z]{2,})?$/i
   const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/
   const secretKey = 'test-jwt-secret-key-12345'
 
-  describe('1. Email Field Validation', () => {
-    it('accepts valid email addresses', () => {
+  describe('1. Email Field Validation (.edu extension required)', () => {
+    it('accepts valid email addresses with .edu extension', () => {
       assert.equal(emailPattern.test('student@university.edu'), true)
-      assert.equal(emailPattern.test('john.doe@gmail.com'), true)
-      assert.equal(emailPattern.test('user_123@sub.domain.org'), true)
+      assert.equal(emailPattern.test('1at24cs172@atria.edu'), true)
+      assert.equal(emailPattern.test('user@college.edu.in'), true)
     })
 
-    it('rejects invalid email formats', () => {
+    it('rejects email addresses without .edu extension or invalid format', () => {
+      assert.equal(emailPattern.test('john.doe@gmail.com'), false)
+      assert.equal(emailPattern.test('user_123@sub.domain.org'), false)
       assert.equal(emailPattern.test('plainaddress'), false)
-      assert.equal(emailPattern.test('@missingusername.com'), false)
-      assert.equal(emailPattern.test('missingatdomain.com'), false)
+      assert.equal(emailPattern.test('@missingusername.edu'), false)
       assert.equal(emailPattern.test('user@domain'), false)
-      assert.equal(emailPattern.test('user@.com'), false)
     })
   })
 

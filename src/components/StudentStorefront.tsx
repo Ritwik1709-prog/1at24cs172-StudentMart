@@ -1,13 +1,28 @@
 import * as React from 'react'
 import SkateDeckRail, { type SkateDeck } from '@/components/ui/skate-deck-rail'
 
-type Listing = {
+export type Listing = {
   id: string
   name: string
   category: string
   price: number
   description?: string
   stock?: string
+  isOwner?: boolean
+}
+
+export type StorefrontOrderRef = {
+  id?: string
+  orderNumber?: string
+  item: string
+}
+
+interface StudentStorefrontProps {
+  products: Listing[]
+  onAdd: () => void
+  onOrder?: (product: Listing) => void
+  orders?: StorefrontOrderRef[]
+  onViewOrders?: () => void
 }
 
 const palette: Record<string, [string, string, string]> = {
@@ -37,14 +52,117 @@ function coverArt(product: Listing, side: 'front' | 'back') {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-function AddToCollection({ price }: { price: string }) {
-  const [added, setAdded] = React.useState(false)
-  return <button type="button" aria-pressed={added} onClick={() => setAdded(value => !value)} className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm outline-none transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none">
-    {added ? <><svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>Added to collection</> : <>Add to collection · {price}</>}
-  </button>
+function AddToCollection({
+  product,
+  isOrdered,
+  onOrder,
+  onViewOrders,
+}: {
+  product: Listing
+  isOrdered: boolean
+  onOrder?: (product: Listing) => void
+  onViewOrders?: () => void
+}) {
+  const [justAdded, setJustAdded] = React.useState(false)
+  const isPresent = isOrdered || justAdded
+  const formattedPrice = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(product.price)
+
+  if (product.isOwner) {
+    return (
+      <div className="flex flex-wrap items-center gap-2.5 mt-2">
+        <div className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold border border-indigo-200 dark:border-indigo-800 bg-indigo-50/90 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 shadow-sm">
+          <span className="size-2 rounded-full bg-indigo-500 animate-pulse" />
+          <span>Your listing · Active on campus shelf</span>
+        </div>
+      </div>
+    )
+  }
+
+  const handleClick = () => {
+    if (isPresent) {
+      if (onViewOrders) onViewOrders()
+      return
+    }
+    setJustAdded(true)
+    if (onOrder) {
+      onOrder(product)
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2.5 mt-2">
+      <button
+        type="button"
+        aria-pressed={isPresent}
+        onClick={handleClick}
+        className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm outline-none transition-[transform,box-shadow,background-color] hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none ${
+          isPresent
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+        }`}
+      >
+        {isPresent ? (
+          <>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 8.5l3.2 3L13 4.5" />
+            </svg>
+            <span>Added to collection</span>
+          </>
+        ) : (
+          <>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+            <span>Add to collection · {formattedPrice}</span>
+          </>
+        )}
+      </button>
+
+      {isPresent && onViewOrders && (
+        <button
+          type="button"
+          onClick={onViewOrders}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 hover:bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/50 shadow-sm"
+        >
+          <span>View Orders</span>
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M6 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+    </div>
+  )
 }
 
-export default function StudentStorefront({ products, onAdd }: { products: Listing[]; onAdd: () => void }) {
+export default function StudentStorefront({
+  products,
+  onAdd,
+  onOrder,
+  orders = [],
+  onViewOrders,
+}: StudentStorefrontProps) {
   const items = React.useMemo<SkateDeck[]>(() => products.map(product => {
     const tag = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(product.price)
     const image = coverArt(product, 'front')
@@ -56,23 +174,74 @@ export default function StudentStorefront({ products, onAdd }: { products: Listi
       description: product.description || `A student marketplace listing in ${product.category.toLowerCase()}.`,
       image,
       gripImage: coverArt(product, 'back'),
-      details: [product.category, product.stock || 'Available', 'Student Mart listing'],
+      details: [product.category, product.stock || 'Available', 'Campus handoff verified'],
     }
   }), [products])
 
-  if (!items.length) return <div className="market-empty"><span>🔎</span><b>No matching items on this shelf.</b><p>Clear your search or add the first listing.</p><button className="outline-button" onClick={onAdd}>Add a listing</button></div>
+  if (!items.length) {
+    return (
+      <div className="market-empty">
+        <span>🔎</span>
+        <b>No matching items on this shelf.</b>
+        <p>Clear your search or add the first listing.</p>
+        <button className="outline-button" onClick={onAdd}>Add a listing</button>
+      </div>
+    )
+  }
 
-  return <div data-student-storefront className="flex min-h-[620px] w-full items-center justify-center bg-background text-foreground">
-    <SkateDeckRail
-      items={items}
-      eyebrow="Student Mart · Campus collection"
-      heading="Find your next campus essential."
-      caption="Browse textbooks, notes and everyday essentials on the rail. Open an item to see its details and price in rupees."
-      autoplay
-      interval={2800}
-      labels={{ graphic: 'Front', grip: 'Back', close: 'Close', open: 'View item' }}
-      detailAction={deck => <AddToCollection key={deck.id} price={deck.tag || ''} />}
-      action={<button type="button" onClick={onAdd} className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm outline-none transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none">Add a listing</button>}
-    />
-  </div>
+  return (
+    <div data-student-storefront className="flex min-h-[620px] w-full items-center justify-center bg-background text-foreground">
+      <SkateDeckRail
+        items={items}
+        eyebrow="Student Mart · Campus collection"
+        heading="Find your next campus essential."
+        caption="Browse textbooks, notes and everyday essentials on the rail. Open an item to see its details, campus handoff info, and add it to your collection."
+        autoplay
+        interval={2800}
+        labels={{ graphic: 'Front', grip: 'Back', close: 'Close', open: 'View item' }}
+        detailAction={deck => {
+          const product = products.find(p => p.id === deck.id) || {
+            id: deck.id,
+            name: deck.name,
+            category: deck.series || 'Campus essentials',
+            price: Number(deck.tag?.replace(/[^0-9]/g, '')) || 0,
+            description: deck.description,
+          }
+          const isOrdered = Boolean(
+            orders.some(o => o.item === product.name || o.id === product.id || (o.orderNumber && o.item === product.name))
+          )
+          return (
+            <AddToCollection
+              key={deck.id}
+              product={product}
+              isOrdered={isOrdered}
+              onOrder={onOrder}
+              onViewOrders={onViewOrders}
+            />
+          )
+        }}
+        action={
+          <div className="flex items-center gap-3">
+            {orders.length > 0 && onViewOrders && (
+              <button
+                type="button"
+                onClick={onViewOrders}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors shadow-sm"
+              >
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>My Collection ({orders.length} orders)</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onAdd}
+              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm outline-none transition-[transform,box-shadow] hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none"
+            >
+              Add a listing
+            </button>
+          </div>
+        }
+      />
+    </div>
+  )
 }

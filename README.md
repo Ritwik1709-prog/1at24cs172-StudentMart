@@ -43,4 +43,19 @@ The user authentication system is built using **React**, **Node.js/Express**, an
   - Server endpoint `POST /api/auth/logout`: clears the session cookie.
   - Client-side: clears the stored JWT token, resets React authentication state, and redirects back to the login view.
 
+## Campus Storefront & Orders System
+
+- **Interactive Campus Storefront (`Storefront`)**:
+  - 3D rotating deck rail showcasing campus listings across Textbooks, Study Notes, Stationery, Electronics, Project Kits, and Essentials.
+  - Direct **"Add to collection"** action: Clicking instantly registers an order, provides visual feedback, and notifies the user with a quick jump to their orders.
+  - Live **"My Collection"** count chip that tracks active student orders.
+
+- **Orders & Campus Handoff Page (`Orders`)**:
+  - Dynamic status tabs: `All`, `Processing`, `Ready for pickup`, `Completed`, and `Refunded`.
+  - Live summary metric cards calculating total collection volume, items in preparation, items awaiting campus pickup, and completed handoffs.
+  - **Campus Handoff Slip Modal**: Detailed view for every order showing the item listing, price in ₹ INR, student buyer details, safe campus meetup location (e.g. *Central Campus Library Desk 3*), and instant status transition buttons.
+  - **Export to CSV**: Download complete order history and expenditure records with one click.
+  - Endpoints: `GET /api/orders`, `POST /api/orders`, and `PATCH /api/orders/:id/status`.
+
+
 The dashboard's chart, orders and starter catalog are sample UI data. New owner listings are stored in MongoDB and persist across sessions.

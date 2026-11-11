@@ -1,33 +1,319 @@
-/* Shared type scale: Inter for reading, Plus Jakarta Sans for headings. */
-body{font-size:16px}
-.brand{font-size:20px}
-.sidebar-brand .brand{font-size:18px}
-.sidebar .nav-label{font-size:10px;letter-spacing:1px}
-.store-name b{font-size:12px}.store-name small{font-size:11px}
-.nav-item{font-size:13px;height:42px}.nav-item small{font-size:10px}
-.plan-card>b{font-size:12px}.plan-card p,.plan-card button{font-size:11px}
-.profile-copy b{font-size:11px}.profile-copy small{font-size:10px}
-.breadcrumb{font-size:12px}.global-search input{font-size:12px}.global-search kbd{font-size:10px}
-.welcome-row h1{font-size:30px;letter-spacing:-1px}.welcome-sub{font-size:13px}
-.date-line{font-size:10px;letter-spacing:.8px}
-.stat-card{min-height:145px;padding:16px}.stat-label{font-size:12px}.stat-value-row>b{font-size:25px}.stat-delta{font-size:10px}.stat-bottom{font-size:10px}
-.panel-heading h2{font-size:15px}.panel-heading p{font-size:11px}
-.metric-select button,.select-shell select{font-size:10px}.chart-total>b{font-size:24px}.chart-total small,.chart-growth{font-size:10px}.chart-y-labels,.chart-x-labels{font-size:9px}
-.top-product-info b,.top-product-price b{font-size:11px}.top-product-info span,.product-rank{font-size:10px}
-.view-all-button{font-size:11px}
-.orders-table th{font-size:9px}.orders-table td{font-size:11px}.date-cell{font-size:10px!important}.status{font-size:9px}.buyer-cell{font-size:11px}.order-id{font-size:11px!important}
-.outline-button,.filter-label,.table-product b{font-size:11px}.stock-status{font-size:10px}.table-pagination{font-size:10px}
-.dashboard-footnote,.dashboard-footnote button{font-size:10px}
-.auth-subtitle{font-size:13px}.field-label{font-size:12.5px}.input-wrap{height:46px}.input-wrap input{font-size:13.5px}.form-options,.remember,.subtle-button{font-size:12.5px}.auth-submit{height:46px;font-size:13.5px}.auth-terms,.auth-terms button{font-size:11.5px}.auth-bottom{font-size:12px}.auth-bottom button{font-size:12px}
-.product-modal{gap:17px}.product-modal .field-label input,.product-modal .field-label select,.product-modal textarea{font-size:13px;height:44px}.product-modal textarea{height:auto}.product-modal .field-label{font-size:13px}.product-modal>.primary-button{height:45px;font-size:13px}
-.profile-menu button,.notification-popover b{font-size:12px}.notification-popover span{font-size:11px}
-.count-heading,.count-chip{font-size:10px}.page-note{font-size:11px}.settings-detail,.settings-security b,.signout-button{font-size:12px}.settings-security small{font-size:10px}
-[data-student-storefront] [class*="text-[11px]"]{font-size:13px!important}
-[data-student-storefront] [class*="text-[10px]"]{font-size:12px!important}
-[data-student-storefront] .text-xs{font-size:13px!important}
-[data-student-storefront] .text-sm{font-size:15px!important}
-[data-student-storefront] h2{font-size:30px}
-[data-student-storefront] h3{font-size:24px}
+/* Distinctive typography system: Outfit for display/headings, Space Grotesk for metrics/orders/numbers, Plus Jakarta Sans for UI/body */
+:root {
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-numeric: 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Headings & Display Branding */
+h1, h2, h3, h4, .brand, .sidebar-brand .brand, .auth-header h2, .welcome-row h1, .panel-heading h2, .subpage-title h1, .empty-catalog-card h3, .modal-header h3 {
+  font-family: var(--font-display);
+}
+
+.brand {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+}
+.sidebar-brand .brand {
+  font-size: 19px;
+}
+.welcome-row h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.welcome-sub {
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.panel-heading h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.panel-heading p {
+  font-size: 13px;
+}
+.date-line {
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+/* Numbers, Metrics, Order IDs & Currency */
+.stat-value-row > b,
+.chart-total > b,
+.amount-cell,
+.top-product-price b,
+.catalog-stat-info b,
+.order-id,
+.order-id-link,
+.order-slip-badge,
+.stat-delta,
+.chart-growth,
+.tooltip-metric-val,
+.chart-y-labels span,
+.chart-x-labels span,
+.date-cell,
+.orders-table .amount-cell {
+  font-family: var(--font-numeric);
+}
+
+.stat-card {
+  min-height: 154px;
+  padding: 18px;
+}
+.stat-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.stat-value-row > b {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.stat-delta {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+.stat-bottom {
+  font-size: 12px;
+}
+
+.chart-total > b {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.chart-total small, .chart-growth {
+  font-size: 12px;
+}
+.chart-y-labels, .chart-x-labels {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Navigation & Sidebar Typography */
+.sidebar .nav-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+.nav-item {
+  font-size: 14.5px;
+  height: 44px;
+  gap: 12px;
+  font-weight: 600;
+}
+.nav-item small {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2.5px 7.5px;
+  border-radius: 12px;
+}
+.store-name b {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.store-name small {
+  font-size: 11.5px;
+}
+.plan-card > b {
+  font-size: 13.5px;
+}
+.plan-card p, .plan-card button {
+  font-size: 12px;
+}
+.profile-copy b {
+  font-size: 13px;
+  font-weight: 600;
+}
+.profile-copy small {
+  font-size: 11.5px;
+}
+
+/* Topbar & Search */
+.breadcrumb {
+  font-size: 13.5px;
+}
+.global-search input {
+  font-size: 14px;
+}
+.global-search kbd {
+  font-size: 11px;
+}
+
+/* Orders and Products Tables */
+.orders-table th {
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  height: 38px;
+}
+.orders-table td {
+  font-size: 13.5px;
+  height: 52px;
+}
+.date-cell {
+  font-size: 12px !important;
+}
+.status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+}
+.buyer-cell {
+  font-size: 13px;
+  font-weight: 600;
+}
+.order-id, .order-id-link {
+  font-size: 13px !important;
+  font-weight: 600;
+}
+.amount-cell {
+  font-size: 14px !important;
+  font-weight: 700;
+}
+.table-product b {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.product-desc-line {
+  font-size: 12px;
+}
+.stock-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+.table-pagination {
+  font-size: 12px;
+}
+
+/* Buttons and Controls */
+.primary-button, .outline-button, .auth-submit, .table-action-btn {
+  font-family: var(--font-display);
+}
+.primary-button {
+  font-size: 14px;
+  font-weight: 700;
+}
+.outline-button {
+  font-size: 13px;
+  font-weight: 600;
+}
+.table-action-btn {
+  font-size: 12px;
+  padding: 5px 11px;
+}
+.category-tab {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.metric-select button {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 11px;
+}
+.select-shell select {
+  font-size: 12px;
+}
+.view-all-button {
+  font-size: 13px;
+  font-weight: 700;
+}
+.top-product-info b, .top-product-price b {
+  font-size: 13px;
+}
+.top-product-info span, .product-rank {
+  font-size: 11.5px;
+}
+.count-heading, .count-chip {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.page-note {
+  font-size: 12.5px;
+}
+.dashboard-footnote, .dashboard-footnote button {
+  font-size: 12px;
+}
+
+/* Auth Screens */
+.auth-subtitle {
+  font-size: 14px;
+}
+.field-label {
+  font-size: 13.5px;
+}
+.input-wrap {
+  height: 48px;
+}
+.input-wrap input {
+  font-size: 14.5px;
+}
+.form-options, .remember, .subtle-button {
+  font-size: 13px;
+}
+.auth-submit {
+  height: 48px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.auth-terms, .auth-terms button {
+  font-size: 12.5px;
+}
+.auth-bottom {
+  font-size: 12.5px;
+}
+.auth-bottom button {
+  font-size: 12.5px;
+}
+
+/* Modals & Settings */
+.product-modal {
+  gap: 18px;
+}
+.product-modal .field-label input, .product-modal .field-label select, .product-modal textarea {
+  font-size: 14px;
+  height: 46px;
+}
+.product-modal textarea {
+  height: auto;
+}
+.product-modal .field-label {
+  font-size: 13.5px;
+}
+.product-modal > .primary-button {
+  height: 46px;
+  font-size: 14.5px;
+}
+.profile-menu button, .notification-popover b {
+  font-size: 13px;
+}
+.notification-popover span {
+  font-size: 12px;
+}
+.settings-detail, .settings-security b, .signout-button {
+  font-size: 13px;
+}
+.settings-security small {
+  font-size: 11.5px;
+}
+
+[data-student-storefront] [class*="text-[11px]"] { font-size: 13px !important; }
+[data-student-storefront] [class*="text-[10px]"] { font-size: 12px !important; }
+[data-student-storefront] .text-xs { font-size: 13.5px !important; }
+[data-student-storefront] .text-sm { font-size: 15px !important; }
+[data-student-storefront] h2 { font-size: 32px; font-family: var(--font-display); }
+[data-student-storefront] h3 { font-size: 24px; font-family: var(--font-display); }
 
 /* Theme colors */
 html[data-theme="dark"] body,html[data-theme="dark"] .app-shell,html[data-theme="dark"] .main-area,html[data-theme="dark"] .page-content{background:var(--app-bg);color:var(--app-fg)}
@@ -99,4 +385,17 @@ html[data-theme="dark"] .orders-table tbody tr:hover td{background:rgba(255,255,
 html[data-theme="dark"] .category-tab{background:#141724;border-color:#282d3e;color:#94a3b8}
 html[data-theme="dark"] .category-tab:hover{border-color:#4f46e5;color:#c7d2fe}
 html[data-theme="dark"] .category-tab.active{background:#4f46e5;border-color:#4f46e5;color:#ffffff}
+
+html[data-theme="dark"] .order-id-link{color:#c7c9db}
+html[data-theme="dark"] .order-id-link:hover{color:#a5b4fc;text-decoration-color:#a5b4fc}
+html[data-theme="dark"] .pickup-cell{color:#94a3b8}
+html[data-theme="dark"] .status-ready-for-pickup,html[data-theme="dark"] .status-ready{color:#93c5fd;background:#172554}
+html[data-theme="dark"] .order-modal{background:#141724;border:1px solid #232738;color:#f8fafc}
+html[data-theme="dark"] .order-slip-header{border-bottom-color:#282d3e}
+html[data-theme="dark"] .order-slip-badge{background:#172554;color:#93c5fd}
+html[data-theme="dark"] .order-slip-box{background:#181b2a;border-color:#282d3e}
+html[data-theme="dark"] .order-slip-row{color:#94a3b8}
+html[data-theme="dark"] .order-slip-row b{color:#f8fafc}
+html[data-theme="dark"] .campus-safety-note{background:rgba(6,78,59,0.25);border-color:rgba(16,185,129,0.3);color:#6ee7b7}
+
 
